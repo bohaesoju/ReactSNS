@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "next",
+    "dev": "nodemon",
     "build": "next build",
     "start": "next start"
   },
@@ -14,6 +14,11 @@
     "antd": "^3.26.3",
     "axios": "^0.19.2",
     "babel-eslint": "^10.1.0",
+    "cookie-parser": "^1.4.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "express-session": "^1.17.0",
+    "morgan": "^1.9.1",
     "next": "^8.1.0",
     "next-redux-wrapper": "^5.0.0",
     "react": "^16.12.0",

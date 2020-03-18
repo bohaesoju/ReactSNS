@@ -1,11 +1,3 @@
-const dummyUser = {
-    nickname: '제로초',
-    Post: [],
-    Followings: [],
-    Followers: [],
-    id: 1,
-  };
-  
   export const initialState = {
     isLoggedIn: false, // 로그인 여부
     isLoggingOut: false, // 로그아웃 시도중
@@ -108,6 +100,28 @@ const dummyUser = {
           ...state,
           isSigningUp: false,
           signUpErrorReason: action.error,
+        };
+      }
+      case LOAD_USER_REQUEST: {
+        return {
+          ...state,
+        };
+      }
+      case LOAD_USER_SUCCESS: {
+        if (action.me) {
+          return {
+            ...state,
+            me: action.data,
+          };
+        }
+        return {
+          ...state,
+          userInfo: action.data,
+        };
+      }
+      case LOAD_USER_FAILURE: {
+        return {
+          ...state,
         };
       }
       default: {
