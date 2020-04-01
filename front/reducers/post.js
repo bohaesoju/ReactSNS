@@ -1,3 +1,5 @@
+import produce from 'immer';
+
 export const initialState = {
     mainPosts: [], // 화면에 보일 포스트들
     imagePaths: [], // 미리보기 이미지 경로
@@ -56,6 +58,7 @@ export const initialState = {
   export const REMOVE_POST_FAILURE = 'REMOVE_POST_FAILURE';
   
   export default (state = initialState, action) => {
+    return produce(state, (draft) => {
     switch (action.type) {
       case ADD_POST_REQUEST: {
         return {
@@ -71,6 +74,7 @@ export const initialState = {
           isAddingPost: false,
           mainPosts: [action.data, ...state.mainPosts],
           postAdded: true,
+          imagePaths: [],
         };
       }
       case ADD_POST_FAILURE: {
@@ -142,10 +146,66 @@ export const initialState = {
           ...state,
         };
       }
+      case UPLOAD_IMAGES_REQUEST: {
+        return {
+          ...state,
+        };
+      }
+      case UPLOAD_IMAGES_SUCCESS: {
+        return {
+          ...state,
+          imagePaths: [...state.imagePaths, ...action.data],
+        };
+      }
+      case UPLOAD_IMAGES_FAILURE: {
+        return {
+          ...state,
+        };
+      }
+      case REMOVE_IMAGE: {
+        return {
+          ...state,
+          imagePaths: state.imagePaths.filter((v, i) => i !== action.index),
+        }
+      }
+      case LIKE_POST_REQUEST: {
+        break;
+      }
+      case LIKE_POST_SUCCESS: {
+        const postIndex = draft.mainPosts.findIndex(v => v.id === action.data.postId);
+        draft.mainPosts[postIndex].Likers.unshift({ id: action.data.userId });
+        break;
+      }
+      case LIKE_POST_FAILURE: {
+        break;
+      }
+      case UNLIKE_POST_REQUEST: {
+        break;
+      }
+      case UNLIKE_POST_SUCCESS: {
+        const postIndex = draft.mainPosts.findIndex(v => v.id === action.data.postId);
+        const likeIndex = draft.mainPosts[postIndex].Likers.findIndex(v => v.id === action.data.userId);
+        draft.mainPosts[postIndex].Likers.splice(likeIndex, 1);
+        break;
+      }
+      case UNLIKE_POST_FAILURE: {
+        break;
+      }
+      case RETWEET_REQUEST: {
+        break;
+      }
+      case RETWEET_SUCCESS: {
+        draft.mainPosts.unshift(action.data);
+        break;
+      }
+      case RETWEET_FAILURE: {
+        break;
+      }
       default: {
         return {
           ...state,
         };
       }
     }
+  })
   };

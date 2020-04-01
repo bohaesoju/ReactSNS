@@ -1,8 +1,69 @@
-import React from 'react';
+import React, {useCallback, useEffect} from 'react';
 import { Button, List, Card, Icon } from 'antd';
-import NicknameEditForm from '../components/NicknameEditForm';
+import { useDispatch, useSelector } from 'react-redux';
+// import NicknameEditForm from '../components/NicknameEditForm';
+import NicknameEditForm from '../containers/NicknameEditForm';
+import {
+  LOAD_FOLLOWERS_REQUEST,
+  LOAD_FOLLOWINGS_REQUEST,
+  REMOVE_FOLLOWER_REQUEST,
+  UNFOLLOW_USER_REQUEST,
+} from '../reducers/user';
+
+import PostCard from '../components/PostCard';
+
+import { LOAD_USER_POSTS_REQUEST } from '../reducers/post';
 
 const Profile = () => {
+  const dispatch = useDispatch();
+  const { me, followingList, followerList } = useSelector(state => state.user);
+  const { mainPosts } = useSelector(state => state.post);
+
+  useEffect(() => {
+    if(me){
+      dispatch({
+        type: LOAD_FOLLOWERS_REQUEST,
+        data: me.id,
+      });
+      dispatch({
+        type: LOAD_FOLLOWINGS_REQUEST,
+        data: me.id,
+      });
+      dispatch({
+        type: LOAD_USER_POSTS_REQUEST,
+        data: me.id,
+      });
+    }
+  }, [me && me.id]);
+
+  const onUnfollow = useCallback(userId => () => {
+    dispatch({
+      type: UNFOLLOW_USER_REQUEST,
+      data: userId,
+    });
+  }, []);
+
+  const onRemoveFollower = useCallback(userId => () => {
+    dispatch({
+      type: REMOVE_FOLLOWER_REQUEST,
+      data: userId,
+    });
+  }, []);
+
+  // const loadMoreFollowings = useCallback(() => {
+  //   dispatch({
+  //     type: LOAD_FOLLOWINGS_REQUEST,
+  //     offset: followingList.length,
+  //   });
+  // }, [followingList.length]);
+
+  // const loadMoreFollowers = useCallback(() => {
+  //   dispatch({
+  //     type: LOAD_FOLLOWERS_REQUEST,
+  //     offset: followerList.length,
+  //   });
+  // }, [followerList.length]);
+
   return (
     <div>
       <NicknameEditForm />
@@ -13,10 +74,12 @@ const Profile = () => {
         header={<div>팔로잉 목록</div>}
         loadMore={<Button style={{ width: '100%' }}>더 보기</Button>}
         bordered
-        dataSource={['김의중', '개발자', '노드버드오피셜']}
+        dataSource={followingList}
         renderItem={item => (
           <List.Item style={{ marginTop: '20px' }}>
-            <Card actions={[<Icon key="stop" type="stop" />]}><Card.Meta description={item} /></Card>
+            <Card actions={[<Icon key="stop" type="stop" onClick={onUnfollow(item.id)} />]}>
+              <Card.Meta description={item.nickname} />
+            </Card>
           </List.Item>
         )}
       />
@@ -27,15 +90,41 @@ const Profile = () => {
         header={<div>팔로워 목록</div>}
         loadMore={<Button style={{ width: '100%' }}>더 보기</Button>}
         bordered
-        dataSource={['김의중', '개발자', '노드버드오피셜']}
+        dataSource={followerList}
         renderItem={item => (
           <List.Item style={{ marginTop: '20px' }}>
-            <Card actions={[<Icon key="stop" type="stop" />]}><Card.Meta description={item} /></Card>
+            <Card actions={[<Icon key="stop" type="stop" onClick={onRemoveFollower(item.id)} />]}>
+              <Card.Meta description={item.nickname} />
+            </Card>
           </List.Item>
         )}
       />
+      <div>
+        {mainPosts.map(c => (
+          <PostCard key={+c.createdAt} post={c} />
+        ))}
+      </div>
     </div>
   );
 };
+
+// Profile.getInitialProps = async (context) => {
+//   const state = context.store.getState();
+//   // 이 직전에 LOAD_USERS_REQUEST
+//   context.store.dispatch({
+//     type: LOAD_FOLLOWERS_REQUEST,
+//     data: state.user.me && state.user.me.id,
+//   });
+//   context.store.dispatch({
+//     type: LOAD_FOLLOWINGS_REQUEST,
+//     data: state.user.me && state.user.me.id,
+//   });
+//   context.store.dispatch({
+//     type: LOAD_USER_POSTS_REQUEST,
+//     data: state.user.me && state.user.me.id,
+//   });
+
+//   // 이 쯤에서 LOAD_USERS_SUCCESS 돼서 me가 생김.
+// };
 
 export default Profile;
