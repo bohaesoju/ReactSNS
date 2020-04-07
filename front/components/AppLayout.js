@@ -2,14 +2,19 @@ import React, { useEffect } from 'react';
 import Link from 'next/link';
 import PropTypes from 'prop-types';
 import { Input, Row, Col, Menu } from 'antd';
-import LoginForm from './LoginForm';
-import UserProfile from './UserProfile';
+import LoginForm from '../containers/LoginForm';
+import UserProfile from '../containers/UserProfile';
 import { useSelector, useDispatch } from 'react-redux';
+import Router from 'next/router';
 import { LOAD_USER_REQUEST } from '../reducers/user';
 
 const AppLayout = ({ children }) => {
     const { isLoggedIn, me } = useSelector(state => state.user);
     const dispatch = useDispatch();
+
+    const onSearch = (value) => {
+        Router.push({ pathname: '/hashtag', query: { tag: value } }, `/hashtag/${value}`);
+      };
 
     useEffect(() => {
         if(!me){
@@ -22,9 +27,13 @@ const AppLayout = ({ children }) => {
         <div>
             <Menu mode="horizontal">
                 <Menu.Item key="home"><Link href="/"><a>노드버드</a></Link></Menu.Item>
-                <Menu.Item key="profile"><Link href="/profile"><a>프로필</a></Link></Menu.Item>
+                <Menu.Item key="profile"><Link href="/profile" prefetch><a>프로필</a></Link></Menu.Item>
                 <Menu.Item key="mail">
-                    <Input.Search enterButton style={{ verticalAlign: 'middle' }} />
+                <Input.Search
+                    enterButton
+                    style={{ verticalAlign: 'middle' }}
+                    onSearch={onSearch}
+                />
                 </Menu.Item>
             </Menu>
             <Row gutter={8}>

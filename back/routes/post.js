@@ -69,6 +69,24 @@ router.post('/images', upload.array('image'), (req, res) => {
   res.json(req.files.map(v => v.filename));
 });
 
+router.get('/:id', async (req, res, next) => {
+  try {
+    const post = await db.Post.findOne({
+      where: { id: req.params.id },
+      include: [{
+        model: db.User,
+        attributes: ['id', 'nickname'],
+      }, {
+        model: db.Image,
+      }],
+    });
+    res.json(post);
+  } catch (e) {
+    console.error(e);
+    next(e);
+  }
+});
+
 router.get('/:id/comments', async (req, res, next) => {
   try {
     const post = await db.Post.findOne({ where: { id: req.params.id } });
@@ -142,6 +160,20 @@ router.delete('/:id/like', isLoggedIn, async (req, res, next) => {
     }
     await post.removeLiker(req.user.id);
     res.json({ userId: req.user.id });
+  } catch (e) {
+    console.error(e);
+    next(e);
+  }
+});
+
+router.delete('/:id', isLoggedIn, async (req, res, next) => {
+  try {
+    const post = await db.Post.findOne({ where: { id: req.params.id } });
+    if (!post) {
+      return res.status(404).send('포스트가 존재하지 않습니다.');
+    }
+    await db.Post.destroy({ where: { id: req.params.id } });
+    res.send(req.params.id);
   } catch (e) {
     console.error(e);
     next(e);

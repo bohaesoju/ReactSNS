@@ -1,23 +1,35 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
 import { LOAD_HASHTAG_POSTS_REQUEST } from '../reducers/post';
-import PostCard from '../components/PostCard';
+import PostCard from '../containers/PostCard';
 
 const Hashtag = ({tag}) => {
-  console.log('tag', tag);
+
   const dispatch = useDispatch();
-  const { mainPosts } = useSelector(state => state.post);
+  const { mainPosts, hasMorePost } = useSelector(state => state.post);
+
+  const onScroll = useCallback(() => {
+    if (window.scrollY + document.documentElement.clientHeight > document.documentElement.scrollHeight - 300) {
+      if (hasMorePost) {
+        dispatch({
+          type: LOAD_HASHTAG_POSTS_REQUEST,
+          lastId: mainPosts[mainPosts.length - 1] && mainPosts[mainPosts.length - 1].id,
+          data: tag,
+        });
+      }
+    }
+  }, [hasMorePost, mainPosts.length, tag]);
 
   useEffect(() => {
-    dispatch({
-      type: LOAD_HASHTAG_POSTS_REQUEST,
-      data: tag,
-    });
-  }, []);
+    window.addEventListener('scroll', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, [mainPosts.length, hasMorePost, tag]);
+
   return (
     <div>
-      hashtag {tag}
       {mainPosts.map(c => (
         <PostCard key={+c.createdAt} post={c} />
       ))}
@@ -30,9 +42,13 @@ Hashtag.propTypes = {
 };
 
 Hashtag.getInitialProps = async (context) => {
-  console.log('hashtag getInitialProps context', context);
-  console.log('hashtag getInitialProps', context.query.tag);
-  return { tag: context.query.tag };
+  const { tag } = context.query;
+  console.log('hashtag getInitialProps', tag);
+  context.store.dispatch({
+    type: LOAD_HASHTAG_POSTS_REQUEST,
+    data: tag,
+  });
+  return { tag };
 };
 
 export default Hashtag;

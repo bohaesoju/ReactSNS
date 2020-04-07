@@ -13,7 +13,9 @@ export const initialState = {
     followerList: [], // 팔로워 리스트
     userInfo: null, // 남의 정보
     isEditingNickname: false, // 이름 변경 중
-  editNicknameErrorReason: '', // 이름 변경 실패 사유
+    editNicknameErrorReason: '', // 이름 변경 실패 사유
+    hasMoreFollower: false,
+    hasMoreFollowing: false,
   };
   
   export const SIGN_UP_REQUEST = 'SIGN_UP_REQUEST';
@@ -61,6 +63,8 @@ export const EDIT_NICKNAME_SUCCESS = 'EDIT_NICKNAME_SUCCESS';
 export const EDIT_NICKNAME_FAILURE = 'EDIT_NICKNAME_FAILURE';
   
   export const ADD_POST_TO_ME = 'ADD_POST_TO_ME';
+  export const REMOVE_POST_OF_ME = 'REMOVE_POST_OF_ME';
+  
   
   export default (state = initialState, action) => {
     return produce(state, (draft) => {
@@ -146,6 +150,11 @@ export const EDIT_NICKNAME_FAILURE = 'EDIT_NICKNAME_FAILURE';
       }
       case ADD_POST_TO_ME: {
         draft.me.Posts.unshift({ id: action.data });
+        break;
+      }
+      case REMOVE_POST_OF_ME: {
+        const index = draft.me.Posts.findIndex(v => v.id === action.data);
+        draft.me.Posts.splice(index, 1);
         break;
       }
       case LOAD_FOLLOWERS_REQUEST: {

@@ -2,6 +2,7 @@ import React from 'react';
 import Head from 'next/head';
 import PropTypes from 'prop-types';
 import withRedux from 'next-redux-wrapper';
+import withReduxSaga from 'next-redux-saga';
 import { applyMiddleware, compose, createStore } from 'redux';
 import { Provider } from 'react-redux';
 import createSagaMiddleware from 'redux-saga';
@@ -9,16 +10,46 @@ import createSagaMiddleware from 'redux-saga';
 import AppLayout from '../components/AppLayout';
 import reducer from '../reducers';
 import rootSaga from '../sagas';
+import axios from 'axios';
+import Helmet from 'react-helmet';
+import App, { Container } from 'next/app';
+
+import { LOAD_USER_REQUEST } from '../reducers/user';
 
 const NodeBird = ({ Component, store, pageProps }) => {
   return (
     <Provider store={store}>
-      <Head>
-        <title>NodeBird</title>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/antd/3.16.2/antd.css" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick.min.css" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick-theme.min.css" />
-      </Head>
+      <Helmet
+          title="NodeBird"
+          htmlAttributes={{ lang: 'ko' }}
+          meta={[{
+            charset: 'UTF-8',
+          }, {
+            name: 'viewport',
+            content: 'width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=yes,viewport-fit=cover',
+          }, {
+            'http-equiv': 'X-UA-Compatible', content: 'IE=edge',
+          }, {
+            name: 'description', content: '김의중의 NodeBird SNS',
+          }, {
+            name: 'og:title', content: 'NodeBird',
+          }, {
+            name: 'og:description', content: '김의중의 NodeBird SNS',
+          }, {
+            property: 'og:type', content: 'website',
+          }, {
+            property: 'og:image', content: 'https://localhost:3060/favicon.ico',
+          }]}
+          link={[{
+            rel: 'shortcut icon', href: '/favicon.ico',
+          }, {
+            rel: 'stylesheet', href: 'https://cdnjs.cloudflare.com/ajax/libs/antd/3.16.2/antd.css',
+          }, {
+            rel: 'stylesheet', href: 'https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick.min.css',
+          }, {
+            rel: 'stylesheet', href: 'https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick-theme.min.css',
+          }]}
+        />
       <AppLayout>
         <Component {...pageProps} />
       </AppLayout>
@@ -32,15 +63,25 @@ NodeBird.propTypes = {
   pageProps: PropTypes.object.isRequired
 };
 
-NodeBird.getInitialProps = async(context) => {
-  console.log('getInitialProps context', context);
+NodeBird.getInitialProps = async (context) => {
   const { ctx, Component } = context;
   let pageProps = {};
-  if(Component.getInitialProps){
-    pageProps = await Component.getInitialProps(ctx);    
+  const state = ctx.store.getState();
+  const cookie = ctx.isServer ? ctx.req.headers.cookie : '';
+  axios.defaults.headers.Cookie = '';
+  if (ctx.isServer && cookie) {
+    axios.defaults.headers.Cookie = cookie;
+  }
+  if (!state.user.me) {
+    ctx.store.dispatch({
+      type: LOAD_USER_REQUEST,
+    });
+  }
+  if (Component.getInitialProps) {
+    pageProps = await Component.getInitialProps(ctx) || {};
   }
   return { pageProps };
-}
+};
 
 const configureStore = (initialState, options) => {
   const sagaMiddleware = createSagaMiddleware();
@@ -52,8 +93,8 @@ const configureStore = (initialState, options) => {
       !options.isServer && typeof window.__REDUX_DEVTOOLS_EXTENSION__ !== 'undefined' ? window.__REDUX_DEVTOOLS_EXTENSION__() : f => f,
     );
   const store = createStore(reducer, initialState, enhancer);
-  sagaMiddleware.run(rootSaga);
+  store.sagaTask = sagaMiddleware.run(rootSaga);
   return store;
 };
 
-export default withRedux(configureStore)(NodeBird);
+export default withRedux(configureStore)(withReduxSaga(NodeBird));
