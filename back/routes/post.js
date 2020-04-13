@@ -16,7 +16,7 @@ AWS.config.update({
 });
 
 const upload = multer({
-  storage: multer.diskStorage({
+  storage: multerS3({
     s3: new AWS.S3(),
     bucket: 'react-danceworld',
     key(req, file, cb){
